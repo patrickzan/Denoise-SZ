@@ -1,0 +1,184 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of nt_cluster_jd_old</title>
+  <meta name="keywords" content="nt_cluster_jd_old">
+  <meta name="description" content="[A,todss]=nt_cluster_jd(x,dsr,flags) - cluster with joint diagonalization">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../index.html">Home</a> &gt;  <a href="index.html">NoiseTools</a> &gt; nt_cluster_jd_old.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../index.html"><img alt="<" border="0" src="../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for NoiseTools&nbsp;<img alt=">" border="0" src="../right.png"></a></td></tr></table>-->
+
+<h1>nt_cluster_jd_old
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>[A,todss]=nt_cluster_jd(x,dsr,flags) - cluster with joint diagonalization</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>function [A,todss]=nt_cluster_jd(x,dsr,flags) </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre class="comment">[A,todss]=nt_cluster_jd(x,dsr,flags) - cluster with joint diagonalization
+
+  A: map of cluster ownership
+  todss: result of DSS
+
+  x: data (time*channels)
+  dsr: downsample ratio for cross product series
+  flags: 'norm': give each dsr-sized slice the same weight
+
+ See nt_bias_cluster, nt_cluster1D</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="nt_bias_cluster.html" class="code" title="function [c0,c1,A,todss,pwr0,pwr1]=nt_bias_cluster(x,dsr,flags)">nt_bias_cluster</a>	[c0,c1,A,todss,pwr0,pwr1]=nt_bias_cluster(x,dsr,flags) - cluster covariance</li><li><a href="nt_cov.html" class="code" title="function [c,tw]=nt_cov(x,shifts,w);">nt_cov</a>	[c,tw]=nt_cov(x,shifts,w) - time shift covariance</li><li><a href="nt_dss0.html" class="code" title="function [todss,pwr0,pwr1]=nt_dss0(c0,c1,keep1,keep2)">nt_dss0</a>	[todss,pwr1,pwr2]=nt_dss0(c0,c1,keep1,keep2) - dss from covariance</li><li><a href="nt_mmat.html" class="code" title="function y=nt_mmat(x,m)">nt_mmat</a>	y=nt_mmat(x,m) -  matrix multiplication (with convolution)</li><li><a href="nt_normcol.html" class="code" title="function [y,norm]=nt_normcol(x,w)">nt_normcol</a>	[y,norm]=nt_normcol(x,w) - normalize each column so its weighted msq is 1</li><li><a href="nt_sgram.html" class="code" title="function [s,f,t]=nt_sgram(x,window,noverlap,nfft,sr,flags)">nt_sgram</a>	[s,f,t]=nt_sgram(x,window,noverlap,nfft,sr,flags) - spectrogram</li><li><a href="nt_spect_plot.html" class="code" title="function varargout=nt_spect_plot(x,varargin)">nt_spect_plot</a>	nt_spect_plot - plot power spectrum</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../matlabicon.gif)">
+</ul>
+<!-- crossreference -->
+
+<h2><a name="_subfunctions"></a>SUBFUNCTIONS <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="#_sub1" class="code">function y=norm2(x,n,ind)</a></li></ul>
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [A,todss]=nt_cluster_jd(x,dsr,flags)</a>
+0002 <span class="comment">%[A,todss]=nt_cluster_jd(x,dsr,flags) - cluster with joint diagonalization</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">%  A: map of cluster ownership</span>
+0005 <span class="comment">%  todss: result of DSS</span>
+0006 <span class="comment">%</span>
+0007 <span class="comment">%  x: data (time*channels)</span>
+0008 <span class="comment">%  dsr: downsample ratio for cross product series</span>
+0009 <span class="comment">%  flags: 'norm': give each dsr-sized slice the same weight</span>
+0010 <span class="comment">%</span>
+0011 <span class="comment">% See nt_bias_cluster, nt_cluster1D</span>
+0012 
+0013 
+0014 <span class="keyword">if</span> nargin&lt;3 ||isempty(flags); flags=[]; <span class="keyword">end</span>
+0015 <span class="keyword">if</span> nargin&lt;2; error(<span class="string">'!'</span>); <span class="keyword">end</span>
+0016 
+0017 <span class="keyword">if</span> ~exist(<span class="string">'vl_kmeans'</span>);
+0018     disp(<span class="string">'vl_kmeans() not found, download from http://www.vlfeat.org'</span>);
+0019 <span class="keyword">end</span>
+0020 <span class="keyword">if</span> ndims(x)&gt;2; 
+0021     error(<span class="string">'x should be time*channels'</span>);
+0022 <span class="keyword">end</span>
+0023 
+0024 disp(<span class="string">'entering nt_cluster_jd...'</span>);
+0025 
+0026 <span class="comment">% initial clustering</span>
+0027 [C0,C1,A,todss]=<a href="nt_bias_cluster.html" class="code" title="function [c0,c1,A,todss,pwr0,pwr1]=nt_bias_cluster(x,dsr,flags)">nt_bias_cluster</a>(x,dsr,flags);
+0028 todss2=todss(:,[1 end]); <span class="comment">% keep only first and last components</span>
+0029 z=<a href="nt_mmat.html" class="code" title="function y=nt_mmat(x,m)">nt_mmat</a>(x,todss2);
+0030 
+0031 figure(2);  clf; set(gcf, <span class="string">'name'</span>,<span class="string">'nt_cluster_jd'</span>);
+0032 subplot 511; plot(x); title(<span class="string">'data'</span>);
+0033 subplot 512; plot(A,<span class="string">'.-'</span>); title(<span class="string">'initial cluster map'</span>);
+0034 subplot 513; plot(z(:,1)); title(<span class="string">'DSS1'</span>);
+0035 subplot 514; plot(z(:,2)); title(<span class="string">'DSS2'</span>);
+0036 drawnow; <span class="comment">%pause(1);</span>
+0037 
+0038 <span class="comment">% iterate until stable</span>
+0039 old_A=A;
+0040 <span class="keyword">for</span> k=1:10
+0041     [~,~,A]=<a href="nt_bias_cluster.html" class="code" title="function [c0,c1,A,todss,pwr0,pwr1]=nt_bias_cluster(x,dsr,flags)">nt_bias_cluster</a>(<a href="nt_normcol.html" class="code" title="function [y,norm]=nt_normcol(x,w)">nt_normcol</a>(z),dsr,flags); <span class="comment">%cluster first &amp; last components</span>
+0042     disp([<span class="string">'cluster sizes: '</span>, num2str([sum(A==1), sum(A==2)])]);
+0043     c1=<a href="nt_cov.html" class="code" title="function [c,tw]=nt_cov(x,shifts,w);">nt_cov</a>(x(find(A==1),:));
+0044     c0=c1+<a href="nt_cov.html" class="code" title="function [c,tw]=nt_cov(x,shifts,w);">nt_cov</a>(x(find(A==2),:));
+0045     [todss,pwr0,pwr1]=<a href="nt_dss0.html" class="code" title="function [todss,pwr0,pwr1]=nt_dss0(c0,c1,keep1,keep2)">nt_dss0</a>(c0,c1);
+0046     todss2=todss(:,[1 end]); <span class="comment">% keep only first and last</span>
+0047     z=<a href="nt_mmat.html" class="code" title="function y=nt_mmat(x,m)">nt_mmat</a>(x,todss2);
+0048     <span class="comment">%figure(3); clf; plot(double(A)); pause</span>
+0049     subplot 515; plot(A,<span class="string">'.-'</span>); title(<span class="string">'final cluster map'</span>);
+0050     <span class="keyword">if</span> old_A==A; <span class="keyword">break</span>; <span class="keyword">end</span>
+0051     old_A=A;
+0052 <span class="keyword">end</span> 
+0053 
+0054 <span class="keyword">if</span> nargout==0;
+0055     <span class="comment">% no output, just plot</span>
+0056     disp([<span class="string">'cluster1: '</span>,num2str(100*numel(find(A==1))/numel(A)), <span class="string">'%'</span>]);
+0057 
+0058     z1=<a href="nt_mmat.html" class="code" title="function y=nt_mmat(x,m)">nt_mmat</a>(x,todss(:,1));
+0059     z2=<a href="nt_mmat.html" class="code" title="function y=nt_mmat(x,m)">nt_mmat</a>(x,todss(:,end));
+0060     z=<a href="nt_mmat.html" class="code" title="function y=nt_mmat(x,m)">nt_mmat</a>(x,todss); 
+0061     z=<a href="nt_normcol.html" class="code" title="function [y,norm]=nt_normcol(x,w)">nt_normcol</a>(z);
+0062     e1=mean(z(find(A==1),:).^2);
+0063     e2=mean(z(find(A==2),:).^2);
+0064 
+0065     figure(100); clf
+0066     plot(x); hold on
+0067     xx=x;
+0068     xx(find(A==2),:)=nan;
+0069     plot(xx,<span class="string">'k'</span>);
+0070     axis tight
+0071     title(<span class="string">'black: cluster2'</span>);
+0072     
+0073     figure(101); clf
+0074     subplot 121;
+0075     plot(pwr1./pwr0,<span class="string">'.-'</span>); xlabel(<span class="string">'component'</span>); ylabel(<span class="string">'score'</span>); title(<span class="string">'DSS cluster A vs B'</span>);
+0076     subplot 122;
+0077     wsize=min(1024,size(z1,1));
+0078     <a href="nt_spect_plot.html" class="code" title="function varargout=nt_spect_plot(x,varargin)">nt_spect_plot</a>(z1,wsize,[],[],1);
+0079     hold on
+0080     wsize=min(1024,size(z2,1));
+0081     <a href="nt_spect_plot.html" class="code" title="function varargout=nt_spect_plot(x,varargin)">nt_spect_plot</a>(z2,wsize,[],[],1);
+0082     xlim([0 .5])
+0083     nt_colorlines([],[1 3]);
+0084     legend(<span class="string">'first'</span>,<span class="string">'last'</span>); legend boxoff
+0085     hold off
+0086 
+0087     
+0088     figure(102); clf
+0089     subplot 211;
+0090     plot(z1); axis tight
+0091     title(<span class="string">'first DSS component'</span>)
+0092     subplot 212;
+0093     plot(z2); axis tight
+0094     title(<span class="string">'last DSS component'</span>);
+0095     
+0096     figure(103); clf
+0097     plot([e1',e2'], <span class="string">'.-'</span>); legend(<span class="string">'cluster A'</span>, <span class="string">'cluster B'</span>); title (<span class="string">'power per component'</span>);
+0098     
+0099     figure(104);clf
+0100     subplot 121; imagescc(<a href="nt_cov.html" class="code" title="function [c,tw]=nt_cov(x,shifts,w);">nt_cov</a>(z(find(A==1),:))); title(<span class="string">'cluster A'</span>); 
+0101     subplot 122; imagescc(<a href="nt_cov.html" class="code" title="function [c,tw]=nt_cov(x,shifts,w);">nt_cov</a>(z(find(A==2),:))); title(<span class="string">'cluster B'</span>);
+0102     
+0103     <span class="keyword">if</span> 0 
+0104         figure(105); clf
+0105         subplot 211;
+0106         <a href="nt_sgram.html" class="code" title="function [s,f,t]=nt_sgram(x,window,noverlap,nfft,sr,flags)">nt_sgram</a>(z1,1024,32,[],1);
+0107         title(<span class="string">'first'</span>);
+0108         subplot 212;
+0109         <a href="nt_sgram.html" class="code" title="function [s,f,t]=nt_sgram(x,window,noverlap,nfft,sr,flags)">nt_sgram</a>(z2,1024,32,[],1);
+0110         title(<span class="string">'last'</span>);
+0111     <span class="keyword">end</span>
+0112     clear c0 c1 A todss pwr0 pwr1
+0113     
+0114 <span class="keyword">end</span>
+0115 
+0116 <a name="_sub1" href="#_subfunctions" class="code">function y=norm2(x,n,ind)</a>
+0117 [I,J]=ind2sub([n,n],ind);
+0118 <span class="keyword">for</span> k=1:size(x,1)
+0119     a=x(k,1:n);
+0120     b=sqrt(a(I).*a(J));
+0121     y(k,:)=x(k,:)./b;
+0122 <span class="keyword">end</span>
+0123 
+0124     
+0125     
+0126</pre></div>
+<hr><address>Generated on Wed 29-Apr-2015 15:09:19 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>

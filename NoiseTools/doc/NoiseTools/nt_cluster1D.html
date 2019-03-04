@@ -1,0 +1,112 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+                "http://www.w3.org/TR/REC-html40/loose.dtd">
+<html>
+<head>
+  <title>Description of nt_cluster1D</title>
+  <meta name="keywords" content="nt_cluster1D">
+  <meta name="description" content="[C,A,energy]=nt_cluster1D(x) - cluster 1D data into 2 clusters">
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+  <meta name="generator" content="m2html v1.5 &copy; 2003-2005 Guillaume Flandin">
+  <meta name="robots" content="index, follow">
+  <link type="text/css" rel="stylesheet" href="../m2html.css">
+</head>
+<body>
+<a name="_top"></a>
+<div><a href="../index.html">Home</a> &gt;  <a href="index.html">NoiseTools</a> &gt; nt_cluster1D.m</div>
+
+<!--<table width="100%"><tr><td align="left"><a href="../index.html"><img alt="<" border="0" src="../left.png">&nbsp;Master index</a></td>
+<td align="right"><a href="index.html">Index for NoiseTools&nbsp;<img alt=">" border="0" src="../right.png"></a></td></tr></table>-->
+
+<h1>nt_cluster1D
+</h1>
+
+<h2><a name="_name"></a>PURPOSE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>[C,A,energy]=nt_cluster1D(x) - cluster 1D data into 2 clusters</strong></div>
+
+<h2><a name="_synopsis"></a>SYNOPSIS <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="box"><strong>function [C,A,score]=nt_cluster1D(x); </strong></div>
+
+<h2><a name="_description"></a>DESCRIPTION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre class="comment">[C,A,energy]=nt_cluster1D(x) - cluster 1D data into 2 clusters
+
+  x: column vector or matrix of data to cluster
+
+  C: centroid pairs (one pair per column)
+  A: ownership matrix
+  score: energy/total energy, for each column</pre></div>
+
+<!-- crossreference -->
+<h2><a name="_cross"></a>CROSS-REFERENCE INFORMATION <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+This function calls:
+<ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="nt_demean.html" class="code" title="function [x,mn]=nt_demean(x,w)">nt_demean</a>	[y,mn]=nt_demean(x,w) - remove weighted mean over cols</li></ul>
+This function is called by:
+<ul style="list-style-image:url(../matlabicon.gif)">
+<li><a href="nt_cluster_jd.html" class="code" title="function [IDX,TODSS,SCORE]=nt_cluster_jd(x,dsr,flags,init)">nt_cluster_jd</a>	[IDX,todss,SCORE]=nt_cluster_jd(x,dsr,flags,init) - cluster with joint diagonalization</li></ul>
+<!-- crossreference -->
+
+
+
+<h2><a name="_source"></a>SOURCE CODE <a href="#_top"><img alt="^" border="0" src="../up.png"></a></h2>
+<div class="fragment"><pre>0001 <a name="_sub0" href="#_subfunctions" class="code">function [C,A,score]=nt_cluster1D(x);</a>
+0002 <span class="comment">%[C,A,energy]=nt_cluster1D(x) - cluster 1D data into 2 clusters</span>
+0003 <span class="comment">%</span>
+0004 <span class="comment">%  x: column vector or matrix of data to cluster</span>
+0005 <span class="comment">%</span>
+0006 <span class="comment">%  C: centroid pairs (one pair per column)</span>
+0007 <span class="comment">%  A: ownership matrix</span>
+0008 <span class="comment">%  score: energy/total energy, for each column</span>
+0009 
+0010 maxiter=100; 
+0011 
+0012 <span class="keyword">if</span> nargin&lt;1; error(<span class="string">'!'</span>); <span class="keyword">end</span>
+0013 <span class="keyword">if</span> size(x,1)&lt;2; error(<span class="string">'too small to cluster'</span>); <span class="keyword">end</span>
+0014 
+0015 x0=x; <span class="comment">% save unsorted</span>
+0016 x=sort(x);
+0017 
+0018 <span class="comment">% initialize with min,max</span>
+0019 C1=min(x);
+0020 C2=max(x);
+0021 last_energy=inf;
+0022 energy=0;
+0023 total_energy=sum(<a href="nt_demean.html" class="code" title="function [x,mn]=nt_demean(x,w)">nt_demean</a>(x).^2);
+0024 
+0025 <span class="keyword">for</span> k=1:maxiter
+0026     
+0027     <span class="comment">% cumulative energy of samples minus closest centroid</span>
+0028     energy_vector= cumsum( bsxfun(@minus, x, C1).^2 )  - cumsum( bsxfun(@minus,x,C2).^2 ) ;
+0029 <span class="comment">%     B=10;</span>
+0030 <span class="comment">%     energy_vector= bsxfun(@rdivide, cumsum( bsxfun(@minus, x, C1).^2 ), B+(1:size(x,1))') - bsxfun(@rdivide, cumsum( bsxfun(@minus,x,C2).^2 ), (B+(1:size(x,1))')) ;</span>
+0031     
+0032     <span class="comment">% index of lowest energy in each column</span>
+0033     [~,idx]=min(energy_vector,[],1);    
+0034     
+0035     <span class="comment">% new centroids</span>
+0036     C1=mean(x(1:idx,:),1); C2=mean(x(idx+1:<span class="keyword">end</span>,:),1);
+0037 
+0038     
+0039     <span class="comment">% new energy</span>
+0040     energy = sum(bsxfun(@minus, x(1:idx,:),C1).^2) + sum(bsxfun(@minus,x(idx+1:<span class="keyword">end</span>,:),C2).^2); 
+0041     score=energy./total_energy;
+0042     <span class="keyword">if</span> last_energy &lt;= energy; <span class="keyword">break</span>; <span class="keyword">end</span>
+0043     last_energy=energy;
+0044 
+0045     <span class="comment">%disp(num2str([k, last_energy,energy, score, idx]))</span>
+0046 <span class="keyword">end</span>
+0047 
+0048 <span class="comment">% cluster ownership labels</span>
+0049 A=ones(size(x));
+0050 
+0051 <span class="keyword">for</span> k=1:size(x,2); y(k)=x(idx(k),k); <span class="keyword">end</span>
+0052 
+0053 thresh=bsxfun(@times,ones(size(x)),y);
+0054 A(find(x0&gt;thresh))=2;
+0055 
+0056 C=[C1;C2];
+0057 
+0058 <span class="keyword">if</span> nargout==0; clear C ; <span class="keyword">end</span>
+0059</pre></div>
+<hr><address>Generated on Wed 29-Apr-2015 15:09:19 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+</body>
+</html>
