@@ -117,9 +117,9 @@ cmat2=mean(cmat2,3);cmat1=mean(cmat1,3);
 keep2=10.^-13;
 keep1=[];
 % [todss,fromdss,ratio,pwr]=dss0(cmat1,cmat2,keep1,keep2);
-[todss,fromdss,ratio,pwr]=dss0(cmat1,cmat2,keep1,keep2);
+[todss,ratio,pwr]=dss0(cmat1,cmat2,keep1,keep2);
 to_dss=todss;
-from_dss=fromdss;
+from_dss=pinv(todss);
 end
 
 
